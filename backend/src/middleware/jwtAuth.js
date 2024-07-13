@@ -3,8 +3,7 @@ import jwt from 'jsonwebtoken';
 import db from '../config/prisma.js';
 
 const auth = async (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const token = req.headers['authorization'];
 
     if (!token) {
         return ErrorResponse(res, 401, 'Unauthorized', 'Token not found');;
