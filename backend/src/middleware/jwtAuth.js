@@ -1,4 +1,6 @@
 import { ErrorResponse } from "../utils/response.js";
+import jwt from 'jsonwebtoken';
+import db from '../config/prisma.js';
 
 const auth = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -9,8 +11,8 @@ const auth = async (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET_KEY);
-        const user = await prisma.users.findUnique({
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        const user = await db.users.findUnique({
             where: { id: decoded.id_user },
             include: { role: true }
         });
