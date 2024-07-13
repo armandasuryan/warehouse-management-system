@@ -3,8 +3,8 @@ import { SuccessResponse, ErrorResponse } from "../utils/response.js";
 import jwt from 'jsonwebtoken';
 import db from '../config/prisma.js';
 import bcrypt from 'bcrypt';
+import { getPaginated } from "../utils/pagination.js";
 
-const JWT_SECRET_KEY = 'your_secret_key';
 const JWT_EXPIRATION_TIME = '120m';
 
 const userLogin = async (req, res) => {
@@ -29,7 +29,7 @@ const userLogin = async (req, res) => {
         }
 
         // Generate JWT token
-        const generateToken = jwt.sign({ id_user: user.id, username: user.username, role_name: user.role.role_name, }, JWT_SECRET_KEY, { expiresIn: JWT_EXPIRATION_TIME });
+        const generateToken = jwt.sign({ id_user: user.id, username: user.username, role_name: user.role.role_name, }, process.env.JWT_SECRET_KEY, { expiresIn: JWT_EXPIRATION_TIME });
         
         // Send response data
         const data = {
@@ -49,6 +49,7 @@ const userLogin = async (req, res) => {
 const createUserData = async (req, res) => {
     try {
         const {username, password, id_role} = req.body
+        const search = ""
         
         const hashedPassword = await bcrypt.hash(password, 12);
         const payloadData = {
@@ -59,9 +60,10 @@ const createUserData = async (req, res) => {
         }
 
         await userModel.createUser(payloadData);
-        const getUpdatedUser = await userModel.getAllUsers();
+        const getUpdatedUser = await userModel.getAllUsers(search);
+        const paginatedData = await getPaginated(req, page, limit, getUpdatedUser);
 
-        return SuccessResponse(res, 200, "Success created new data user", getUpdatedUser)
+        return SuccessResponse(res, 200, "Success created new data user", paginatedData)
     } catch (error) {   
         return ErrorResponse(res, 404, "Failed to created new data user", error.message)
     }
@@ -70,6 +72,8 @@ const createUserData = async (req, res) => {
 const updateUserData = async(req, res) => {
     try {
         const {id, username, password, id_role} = req.body
+        const {page, limit} = req.query
+        const search = ""
 
         const hashedPassword = await bcrypt.hash(password, 12);
         const payloadData = {
@@ -78,9 +82,10 @@ const updateUserData = async(req, res) => {
             id_role,
         }
         await userModel.updateUser(id, payloadData);
-        const getUpdatedUser = await userModel.getAllUsers();
+        const getUpdatedUser = await userModel.getAllUsers(search);
+        const paginatedData = await getPaginated(req, page, limit, getUpdatedUser);
 
-        return SuccessResponse(res, 200, "Success update data user", getUpdatedUser)
+        return SuccessResponse(res, 200, "Success update data user", paginatedData)
     } catch (error) {
         return ErrorResponse(res, 404, "Failed to update data user", error.message)
     }
@@ -89,21 +94,36 @@ const updateUserData = async(req, res) => {
 const deletedUserData = async(req, res) => {
     try {
         const {id} = req.body
+        const search = ""
 
         await userModel.deleteUser(id);
-        const getUpdatedUser = await userModel.getAllUsers();
+        const getUpdatedUser = await userModel.getAllUsers(search);
+        const paginatedData = await getPaginated(req, page, limit, getUpdatedUser);
 
-        return SuccessResponse(res, 200, "Success delete data user", getUpdatedUser)
+        return SuccessResponse(res, 200, "Success delete data user", paginatedData)
     } catch (error) {
         return ErrorResponse(res, 404, "Failed to delete data user", error.message)
     }
 }
 
+const getListUserData = async(req, res) => {
+    try {
+        const {search, page, limit} = req.query;
+
+        const getAllUserData = await userModel.getAllUsers(search);
+        const paginatedData = await getPaginated(req, page, limit, getAllUserData);
+
+        return SuccessResponse(res, 200, "Success get list data user", paginatedData)
+    } catch (error) {
+        return ErrorResponse(res, 404, "Failed to get list data user", error.message)
+    }
+}
 const userController = {
     userLogin,
     createUserData,
     updateUserData,
     deletedUserData,
+    getListUserData,
 };
 
 export default userController;
