@@ -8,11 +8,26 @@ const createUser = async (data) => {
 };
 
 // Get all users
-const getAllUsers = async () => {
-    return await db.users.findMany({
-        where: {deleted_at: !deleted_at}
-    });
-};
+const getAllUsers = async (search) => {
+    let users;
+
+    if (!search || search.trim() === "") {
+        users = await db.users.findMany({
+            where: { deleted_at: null },
+        });
+    } else {
+        users = await db.users.findMany({
+            where: {
+                deleted_at: null,
+                username: {
+                    contains: search,
+                },
+            },
+        });
+    }
+
+    return users;
+}
 
 // Update a user by ID
 const updateUser = async (id, data) => {

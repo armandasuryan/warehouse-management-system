@@ -8,5 +8,6 @@ userRoutes.post('/login', userController.userLogin);
 userRoutes.post('/user/create', [auth], userController.createUserData)
 userRoutes.put('/user/update', [auth], userController.updateUserData)
 userRoutes.delete('/user/delete', [auth], userController.deletedUserData)
+userRoutes.get('/user/list', [auth], userController.getListUserData)
 
 export default userRoutes;
