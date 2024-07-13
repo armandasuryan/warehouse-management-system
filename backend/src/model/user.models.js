@@ -10,20 +10,23 @@ const createUser = async (data) => {
 // Get all users
 const getAllUsers = async (search) => {
     let users;
+    const searchKeyword = `%${search}%`
 
     if (!search || search.trim() === "") {
-        users = await db.users.findMany({
-            where: { deleted_at: null },
-        });
+        users = await db.$queryRaw`
+        select users.*, role.role_name from users
+        left join role on users.id_role = role.id
+        where users.deleted_at is null
+        group by users.id
+        order by role.role_name asc`
     } else {
-        users = await db.users.findMany({
-            where: {
-                deleted_at: null,
-                username: {
-                    contains: search,
-                },
-            },
-        });
+        users = await db.$queryRaw`
+        select users.*, role.role_name from users
+        left join role on users.id_role = role.id
+        where users.deleted_at is null and users.username like $1
+        group by users.id
+        order by role.role_name asc`, 
+        searchKeyword
     }
 
     return users;
