@@ -2,7 +2,8 @@ import userModel from "../model/user.models.js";
 import { SuccessResponse, ErrorResponse } from "../utils/response.js";
 import jwt from 'jsonwebtoken';
 import db from '../config/prisma.js';
-import bcrypt from 'bcrypt';
+import { hashPassword, verifyPassword } from "../middleware/hashPassword.js";
+import crypto from 'crypto';
 import { getPaginated } from "../utils/pagination.js";
 
 const JWT_EXPIRATION_TIME = '120m';
@@ -11,19 +12,21 @@ const userLogin = async (req, res) => {
     try {
         const { username, password } = await req.body;
 
-        // User verification
+        // get user
         const user = await db.users.findFirst({
             where: { username: username },
             include: { role: true }
         });
 
-        // Compare the provided password with the hashed password
-        
         if (!user) {
             return ErrorResponse(res, 401, 'User not found', 'error')
         }
         
-        const passwordMatch = await bcrypt.compare(password, user.password);
+        // Extract salt from user record
+        const { salt, password: storedHashedPassword } = user;
+
+        // Compare the provided password with the hashed password
+        const passwordMatch = await verifyPassword(password, salt, storedHashedPassword);
         if (!passwordMatch) {
             return ErrorResponse(res, 401, "Password dosn't macth", "error")
         }
@@ -48,31 +51,42 @@ const userLogin = async (req, res) => {
 
 const createUserData = async (req, res) => {
     try {
-        const {username, password, id_role} = req.body
-        const search = ""
-        
-        const hashedPassword = await bcrypt.hash(password, 12);
-        const payloadData = {
-            username, 
-            password: hashedPassword,
-            id_role,
-            created_at: new Date() // Setting the current date and time
+        const { username, password, id_role } = req.body;
+
+        if (!username || !password || !id_role) {
+            return ErrorResponse(res, 400, "Missing required fields", 'error');
         }
+
+        const search = "";
+        const saltLength = parseInt(process.env.PBKDF2_SALT_LENGTH);
+        const salt = crypto.randomBytes(saltLength).toString('hex'); // Generate a random salt
+
+        console.log("waktu sekarang", new Date())
+        const hashedPassword = await hashPassword(password, salt);
+        const payloadData = {
+            username,
+            password: hashedPassword,
+            salt: salt,
+            id_role,
+            created_at: new Date().toISOString()
+        };
 
         await userModel.createUser(payloadData);
         const getUpdatedUser = await userModel.getAllUsers(search);
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10; 
         const paginatedData = await getPaginated(req, page, limit, getUpdatedUser);
 
-        return SuccessResponse(res, 200, "Success created new data user", paginatedData)
-    } catch (error) {   
-        return ErrorResponse(res, 404, "Failed to created new data user", error.message)
+        return SuccessResponse(res, 200, "Successfully created new user", paginatedData);
+    } catch (error) {
+        console.error(error); 
+        return ErrorResponse(res, 500, "Failed to create new user", error.message);
     }
-}
+};
 
 const updateUserData = async(req, res) => {
     try {
         const {id, username, password, id_role} = req.body
-        const {page, limit} = req.query
         const search = ""
 
         const hashedPassword = await bcrypt.hash(password, 12);
@@ -83,6 +97,8 @@ const updateUserData = async(req, res) => {
         }
         await userModel.updateUser(id, payloadData);
         const getUpdatedUser = await userModel.getAllUsers(search);
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10; 
         const paginatedData = await getPaginated(req, page, limit, getUpdatedUser);
 
         return SuccessResponse(res, 200, "Success update data user", paginatedData)
@@ -98,6 +114,8 @@ const deletedUserData = async(req, res) => {
 
         await userModel.deleteUser(id);
         const getUpdatedUser = await userModel.getAllUsers(search);
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10; 
         const paginatedData = await getPaginated(req, page, limit, getUpdatedUser);
 
         return SuccessResponse(res, 200, "Success delete data user", paginatedData)
@@ -108,8 +126,9 @@ const deletedUserData = async(req, res) => {
 
 const getListUserData = async(req, res) => {
     try {
-        const {search, page, limit} = req.query;
-
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10; 
+        const search = parseInt(req.query.search) || ""; 
         const getAllUserData = await userModel.getAllUsers(search);
         const paginatedData = await getPaginated(req, page, limit, getAllUserData);
 

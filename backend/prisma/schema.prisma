@@ -11,16 +11,18 @@ model role {
   id         Int       @id @default(autoincrement())
   role_name  String    @db.VarChar(255)
   created_at DateTime? @default(now()) @db.Timestamp(0)
+  deleted_at DateTime? @db.DateTime(0)
   users      users[]
 }
 
 model users {
   id         Int       @id @default(autoincrement())
   username   String    @db.VarChar(255)
-  password   String    @db.VarChar(255)
+  password   String    @db.Text
   created_at DateTime? @db.DateTime(0)
   deleted_at DateTime? @db.DateTime(0)
   id_role    Int?
+  salt       String?   @db.Text
   role       role?     @relation(fields: [id_role], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_role")
 
   @@index([id_role], map: "fk_role")
