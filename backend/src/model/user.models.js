@@ -10,14 +10,22 @@ const createUser = async (data) => {
                 salt: data.salt,
             },
         });
-
-        await db.employee.create({
+        
+        const employee = await db.employee.create({
             data: {
                 name: data.employee_name,
                 id_role: data.id_role,
                 email: data.email,
+                id_user: user.id,
             },
         });
+
+        await db.users.update({
+            where: {id: user.id},
+            data: {
+                id_employee: employee.id
+            }
+        })
 
         return user;
     });
@@ -30,17 +38,17 @@ const getAllUsers = async (search) => {
 
     if (!search || search.trim() === "") {
         users = await db.$queryRaw`
-        select users.username, users.id_role, role.role_name from users
-        left join role on users.id_role = role.id
+        select users.username, role.role_name, role.id as id_role from users
         left join employee on employee.id_user = users.id
+        left join role on employee.id_role = role.id
         where users.deleted_at is null
         group by users.id
         order by role.role_name asc`
     } else {
         users = await db.$queryRaw`
-        select users.username, users.id_role, role.role_name, employee.name, employee.email from users
-        left join role on users.id_role = role.id
+        select users.username, role.role_name, role.id as id_role, employee.name, employee.email from users
         left join employee on employee.id_user = users.id
+        left join role on employee.id_role = role.id
         where users.deleted_at is null and users.username like $1
         group by users.id
         order by role.role_name asc`, 

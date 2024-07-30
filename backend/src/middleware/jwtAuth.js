@@ -12,8 +12,7 @@ const auth = async (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
         const user = await db.users.findUnique({
-            where: { id: decoded.id_user },
-            include: { role: true }
+            where: { id: decoded.id_user }
         });
 
         if (!user) {

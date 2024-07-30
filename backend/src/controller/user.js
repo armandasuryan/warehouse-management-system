@@ -70,11 +70,11 @@ const createUserData = async (req, res) => {
         const hashedPassword = await hashPassword(password, salt);
         const payloadData = {
             username,
-            password: hashedPassword,
-            salt: salt,
-            id_role,
             employee_name: employee_name,
             email: email,
+            id_role,
+            password: hashedPassword,
+            salt: salt,
         };
 
         await userModel.createUser(payloadData);
