@@ -5,7 +5,7 @@ import userRoutes from './src/routes/user.routes.js';
 
 config()
 const PORT = process.env.PORT || 8080;
-const DB_HOST = process.env.DB_HOST || localhost;
+const DB_HOST = process.env.DB_HOST;
 
 const app = express();
 const version = '/wms/api/v1'
