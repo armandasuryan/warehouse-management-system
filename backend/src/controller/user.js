@@ -10,34 +10,41 @@ const JWT_EXPIRATION_TIME = '120m';
 
 const userLogin = async (req, res) => {
     try {
-        const { username, password } = await req.body;
+        const { username, password } = req.body;
 
-        // get user
-        const user = await db.users.findFirst({
-            where: { username: username },
-            include: { role: true }
-        });
-
-        if (!user) {
-            return ErrorResponse(res, 401, 'User not found', 'error')
+        // Get user with role
+        const userWithRole = await userModel.getUserLogin(username);
+        
+        if (!userWithRole) {
+            return ErrorResponse(res, 401, 'User not found', 'error');
         }
         
-        // Extract salt from user record
-        const { salt, password: storedHashedPassword } = user;
+        // Extract salt and hashed password from user record
+        const { salt, password: storedHashedPassword, employee } = userWithRole;
 
         // Compare the provided password with the hashed password
         const passwordMatch = await verifyPassword(password, salt, storedHashedPassword);
         if (!passwordMatch) {
-            return ErrorResponse(res, 401, "Password dosn't macth", "error")
+            return ErrorResponse(res, 401, "Password doesn't match", 'error');
         }
 
         // Generate JWT token
-        const generateToken = jwt.sign({ id_user: user.id, username: user.username, role_name: user.role.role_name, }, process.env.JWT_SECRET_KEY, { expiresIn: JWT_EXPIRATION_TIME });
+        const generateToken = jwt.sign(
+            {
+                id_user: userWithRole.id,
+                username: userWithRole.username,
+                role_name: userWithRole.users_to_employee.role.role_name, 
+            },
+            process.env.JWT_SECRET_KEY,
+            { expiresIn: JWT_EXPIRATION_TIME }
+        );
         
         // Send response data
         const data = {
-            username: user.username,
-            role_name: user.role.role_name, 
+            username: userWithRole.username,
+            role_name: userWithRole.role_name,
+            employee_name: userWithRole.users_to_employee.name,
+            email: userWithRole.users_to_employee.email, 
             token: generateToken,
         };
         
@@ -51,7 +58,7 @@ const userLogin = async (req, res) => {
 
 const createUserData = async (req, res) => {
     try {
-        const { username, password, id_role } = req.body;
+        const { username, password, id_role, employee_name, email } = req.body;
 
         if (!username || !password || !id_role) {
             return ErrorResponse(res, 400, "Missing required fields", 'error');
@@ -60,15 +67,14 @@ const createUserData = async (req, res) => {
         const search = "";
         const saltLength = parseInt(process.env.PBKDF2_SALT_LENGTH);
         const salt = crypto.randomBytes(saltLength).toString('hex'); // Generate a random salt
-
-        console.log("waktu sekarang", new Date())
         const hashedPassword = await hashPassword(password, salt);
         const payloadData = {
             username,
             password: hashedPassword,
             salt: salt,
             id_role,
-            created_at: new Date().toISOString()
+            employee_name: employee_name,
+            email: email,
         };
 
         await userModel.createUser(payloadData);
