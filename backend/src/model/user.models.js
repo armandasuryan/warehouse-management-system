@@ -38,7 +38,7 @@ const getAllUsers = async (search) => {
 
     if (!search || search.trim() === "") {
         users = await db.$queryRaw`
-        select users.username, role.role_name, role.id as id_role from users
+        select users.username, role.role_name, employee.name, employee.email, role.id as id_role from users
         left join employee on employee.id_user = users.id
         left join role on employee.id_role = role.id
         where users.deleted_at is null
@@ -46,7 +46,7 @@ const getAllUsers = async (search) => {
         order by role.role_name asc`
     } else {
         users = await db.$queryRaw`
-        select users.username, role.role_name, role.id as id_role, employee.name, employee.email from users
+        select users.username, role.role_name, employee.name, employee.email, role.id as id_role, employee.name, employee.email from users
         left join employee on employee.id_user = users.id
         left join role on employee.id_role = role.id
         where users.deleted_at is null and users.username like $1
