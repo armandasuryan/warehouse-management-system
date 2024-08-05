@@ -1,7 +1,6 @@
 import userModel from "../model/user.models.js";
 import { SuccessResponse, ErrorResponse } from "../utils/response.js";
 import jwt from 'jsonwebtoken';
-import db from '../config/prisma.js';
 import { hashPassword, verifyPassword } from "../middleware/hashPassword.js";
 import crypto from 'crypto';
 import { getPaginated } from "../utils/pagination.js";
@@ -143,6 +142,7 @@ const getListUserData = async(req, res) => {
         return ErrorResponse(res, 404, "Failed to get list data user", error.message)
     }
 }
+
 const userController = {
     userLogin,
     createUserData,
