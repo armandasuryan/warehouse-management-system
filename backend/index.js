@@ -2,6 +2,8 @@ import { config } from 'dotenv';
 import express from 'express';
 import db from './src/config/prisma.js';
 import userRoutes from './src/routes/user.routes.js';
+import uploadFileRoutes from './src/routes/uploadfile.routes.js';
+import bodyParser from 'body-parser';
 
 config()
 const PORT = process.env.PORT || 8080;
@@ -9,9 +11,9 @@ const DB_HOST = process.env.DB_HOST;
 
 const app = express();
 const version = '/wms/api/v1'
-app.use(express.json());
+app.use(express.json(), bodyParser.json());
 
-app.use(`${version}`, userRoutes)
+app.use(`${version}`, userRoutes, uploadFileRoutes)
 
 app.listen(PORT, async () => {
     try {
