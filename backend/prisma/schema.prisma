@@ -8,16 +8,17 @@ datasource db {
 }
 
 model employee {
-  id                Int       @id @default(autoincrement())
-  name              String    @db.VarChar(255)
-  created_at        DateTime? @default(now()) @db.DateTime(0)
-  deleted_at        DateTime? @db.DateTime(0)
-  email             String?   @db.VarChar(100)
-  id_user           Int?      @unique(map: "unique_id_user")
-  id_role           Int?
-  role              role?     @relation(fields: [id_role], references: [id], map: "fk_employee_role")
-  employee_to_users users?    @relation("employee_id_userTousers", fields: [id_user], references: [id], map: "fk_employee_user")
-  users_to_employee users?    @relation("users_id_employeeToemployee")
+  id                   Int                    @id @default(autoincrement())
+  name                 String                 @db.VarChar(255)
+  created_at           DateTime?              @default(now()) @db.DateTime(0)
+  deleted_at           DateTime?              @db.DateTime(0)
+  email                String?                @db.VarChar(100)
+  id_user              Int?                   @unique(map: "unique_id_user")
+  id_role              Int?
+  role                 role?                  @relation(fields: [id_role], references: [id], map: "fk_employee_role")
+  employee_to_users    users?                 @relation("employee_id_userTousers", fields: [id_user], references: [id], map: "fk_employee_user")
+  employee_has_profile employee_has_profile[]
+  users_to_employee    users?                 @relation("users_id_employeeToemployee")
 
   @@index([id_role], map: "fk_employee_role")
 }
@@ -40,4 +41,15 @@ model users {
   id_employee       Int?      @unique(map: "unique_id_employee")
   users_to_employee employee? @relation("employee_id_userTousers")
   employee_to_users employee? @relation("users_id_employeeToemployee", fields: [id_employee], references: [id], map: "fk_user_employee")
+}
+
+model employee_has_profile {
+  id                 Int       @id @default(autoincrement())
+  id_employee        Int?
+  url                String?   @db.VarChar(255)
+  bucket_name        String?   @db.VarChar(255)
+  original_file_name String?   @db.VarChar(255)
+  employee           employee? @relation(fields: [id_employee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "employee_has_profile_ibfk_1")
+
+  @@index([id_employee], map: "id_employee")
 }
