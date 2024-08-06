@@ -2,7 +2,7 @@ import { config } from 'dotenv';
 import express from 'express';
 import db from './src/config/prisma.js';
 import userRoutes from './src/routes/user.routes.js';
-import uploadFileRoutes from './src/routes/uploadfile.routes.js';
+import uploadFileRoutes from './src/routes/file.routes.js';
 import bodyParser from 'body-parser';
 
 config()
