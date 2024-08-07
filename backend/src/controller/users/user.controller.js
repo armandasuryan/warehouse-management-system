@@ -3,6 +3,7 @@ import { SuccessResponse, ErrorResponse } from "../../utils/response.js";
 import jwt from 'jsonwebtoken';
 import { hashPassword, verifyPassword } from "../../middleware/hashPassword.js";
 import { getPaginated } from "../../utils/pagination.js";
+import { userPermission } from "../../middleware/jwtAuth.js";
 
 const userLogin = async (req, res) => {
     try {
@@ -27,7 +28,8 @@ const userLogin = async (req, res) => {
 
         // Generate JWT token
         const generateToken = jwt.sign(
-            {
+            {   
+                id: userWithRole.id,
                 id_user: userWithRole.id,
                 username: userWithRole.username,
                 role_name: userWithRole.users_to_employee.role.role_name, 
@@ -38,6 +40,7 @@ const userLogin = async (req, res) => {
         
         // Send response data
         const data = {
+            id: userWithRole.id,
             username: userWithRole.username,
             role_name: userWithRole.role_name,
             employee_name: userWithRole.users_to_employee.name,
@@ -84,9 +87,10 @@ const createUserData = async (req, res) => {
     }
 };
 
-const updateUserData = async(req, res) => {
+const updateUserData = async(req, res) => {   
     try {
-        const {id, username, password, id_role} = req.body
+        const permission = await userPermission(req);
+        const {username, password, id_role} = req.body
         const search = ""
 
         const hashedPassword = await hashPassword(password);
@@ -95,7 +99,7 @@ const updateUserData = async(req, res) => {
             password: hashedPassword,
             id_role,
         }
-        await userModel.updateUser(id, payloadData);
+        await userModel.updateUser(permission.id, payloadData);
         const getUpdatedUser = await userModel.getAllUsers(search);
         const page = parseInt(req.query.page) || 1; 
         const limit = parseInt(req.query.limit) || 10; 

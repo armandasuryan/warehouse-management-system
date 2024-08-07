@@ -16,14 +16,22 @@ const auth = async (req, res, next) => {
         });
 
         if (!user) {
-             return ErrorResponse(res, 404, 'User Not Found', 'error');
+            return ErrorResponse(res, 404, 'User Not Found', 'error');
         }
 
-        req.user = user; 
-        next(); 
+        req.user = user;
+        next();
     } catch (error) {
         return ErrorResponse(res, 403, 'Forbidden', error.message);
     }
 }
 
-export {auth}
+const userPermission = async (req) => {
+    const token = req.headers['authorization'];
+    const SECRET_KEY = process.env.JWT_SECRET_KEY
+
+    const data = await jwt.verify(token, SECRET_KEY);
+    return data;
+}
+
+export { auth, userPermission }
