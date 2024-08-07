@@ -37,7 +37,6 @@ model users {
   password          String    @db.Text
   created_at        DateTime? @default(now()) @db.DateTime(0)
   deleted_at        DateTime? @db.DateTime(0)
-  salt              String?   @db.Text
   id_employee       Int?      @unique(map: "unique_id_employee")
   users_to_employee employee? @relation("employee_id_userTousers")
   employee_to_users employee? @relation("users_id_employeeToemployee", fields: [id_employee], references: [id], map: "fk_user_employee")

@@ -7,7 +7,6 @@ const createUser = async (data) => {
             data: {
                 username: data.username,
                 password: data.password,
-                salt: data.salt,
             },
         });
         
@@ -60,9 +59,23 @@ const getAllUsers = async (search) => {
 
 // Update a user by ID
 const updateUser = async (id, data) => {
-    return await db.users.update({
+    return await db.$transaction(async (db) => {
+    const user = await db.users.update({
         where: { id: Number(id) },
-        data,
+        data: {
+            username: data.username,
+            password: data.password,
+        },
+    })
+
+    await db.employee.update({
+        where: {id_user: Number(id)},
+        data: {
+            id_role: data.id_role,
+        },
+    })
+
+    return user;
     });
 };
 

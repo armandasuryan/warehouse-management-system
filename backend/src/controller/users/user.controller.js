@@ -2,10 +2,7 @@ import userModel from "../../model/users/user.model.js";
 import { SuccessResponse, ErrorResponse } from "../../utils/response.js";
 import jwt from 'jsonwebtoken';
 import { hashPassword, verifyPassword } from "../../middleware/hashPassword.js";
-import crypto from 'crypto';
 import { getPaginated } from "../../utils/pagination.js";
-
-const JWT_EXPIRATION_TIME = '120m';
 
 const userLogin = async (req, res) => {
     try {
@@ -18,11 +15,12 @@ const userLogin = async (req, res) => {
             return ErrorResponse(res, 401, 'User not found', 'error');
         }
         
-        // Extract salt and hashed password from user record
-        const { salt, password: storedHashedPassword, employee } = userWithRole;
+        // Extract hashed password from user record
+        const { password: storedHashedPassword} = userWithRole;
 
         // Compare the provided password with the hashed password
-        const passwordMatch = await verifyPassword(password, salt, storedHashedPassword);
+        const passwordMatch = await verifyPassword(password, storedHashedPassword);
+    
         if (!passwordMatch) {
             return ErrorResponse(res, 401, "Password doesn't match", 'error');
         }
@@ -35,7 +33,7 @@ const userLogin = async (req, res) => {
                 role_name: userWithRole.users_to_employee.role.role_name, 
             },
             process.env.JWT_SECRET_KEY,
-            { expiresIn: JWT_EXPIRATION_TIME }
+            { expiresIn: process.env.JWT_EXP_TIME }
         );
         
         // Send response data
@@ -47,7 +45,7 @@ const userLogin = async (req, res) => {
             token: generateToken,
         };
         
-        return SuccessResponse(res, 200, 'Login successful', data);
+        return SuccessResponse(res, 200, 'Login successfully', data);
 
     } catch (error) {
         console.error('Login error:', error);
@@ -64,16 +62,13 @@ const createUserData = async (req, res) => {
         }
 
         const search = "";
-        const saltLength = parseInt(process.env.PBKDF2_SALT_LENGTH);
-        const salt = crypto.randomBytes(saltLength).toString('hex'); // Generate a random salt
-        const hashedPassword = await hashPassword(password, salt);
+        const hashedPassword = await hashPassword(password);
         const payloadData = {
             username,
             employee_name: employee_name,
             email: email,
             id_role,
             password: hashedPassword,
-            salt: salt,
         };
 
         await userModel.createUser(payloadData);
@@ -94,7 +89,7 @@ const updateUserData = async(req, res) => {
         const {id, username, password, id_role} = req.body
         const search = ""
 
-        const hashedPassword = await bcrypt.hash(password, 12);
+        const hashedPassword = await hashPassword(password);
         const payloadData = {
             username,
             password: hashedPassword,
