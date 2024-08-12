@@ -15,14 +15,18 @@
     "@prisma/client": "^5.16.1",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
+    "connect-redis": "^7.1.1",
     "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-session": "^1.18.0",
     "jsonwebtoken": "^9.0.2",
     "minio": "^8.0.1",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.10.2",
-    "nodemon": "^3.1.4"
+    "nodemailer": "^6.9.14",
+    "nodemon": "^3.1.4",
+    "redis": "^4.7.0"
   },
   "devDependencies": {
     "prisma": "^5.16.1"
