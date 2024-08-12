@@ -1,22 +1,33 @@
 import { SuccessResponse, ErrorResponse } from "./response.js";
 import * as Minio from 'minio';
+import { userPermission } from "../middleware/jwtAuth.js";
+import path from 'path';
 
 const uploadFile = async (req, res) => {
 
     const file = req.file;
+    const fileExtension = path.extname(file.originalname);
     const requestName = req.params.request;
+    const permission = await userPermission(req)
+    const minioFileName = `${requestName}-${permission.id}${fileExtension}`
 
     try {
         let uploadResult = null;
         if (file !== undefined) {
             const bucketName = requestName;
             // Ensure `uploadFileToMinio` returns relevant data
-            uploadResult = await uploadFileToMinio(req, res, bucketName);
+            uploadResult = await uploadFileToMinio(req, res, bucketName, minioFileName);
+        }
+
+        const data = {
+            "bucket_name": requestName,
+            "original_name_file": file.originalname,
+            "file_minio_name": minioFileName,
         }
 
         // Check if the upload was successful
         if (uploadResult) {
-            return SuccessResponse(res, 200, 'Success upload file', uploadResult);
+            return SuccessResponse(res, 200, 'Success upload file', data);
         } else {
             return SuccessResponse(res, 200, 'The data has been updated, but no file was uploaded', null);
         }
@@ -26,7 +37,7 @@ const uploadFile = async (req, res) => {
     }
 }
 
-const uploadFileToMinio = async (req, res, bucketName) => {
+const uploadFileToMinio = async (req, res, bucketName, minioFileName) => {
     const minioClient = new Minio.Client({
         endPoint: process.env.MINIO_ENDPOINT,
         port: parseInt(process.env.MINIO_PORT, 10),
@@ -38,7 +49,7 @@ const uploadFileToMinio = async (req, res, bucketName) => {
     const sourceFile = req.file;
     const bucket = bucketName;
 
-    const destinationObject = sourceFile.originalname;
+    const destinationObject = minioFileName;
 
     try {
         // Check if the bucket exists
