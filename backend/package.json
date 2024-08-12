@@ -10,8 +10,9 @@
   "author": "Armanda Surya N",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.627.0",
+    "@aws-sdk/s3-request-presigner": "^3.627.0",
     "@prisma/client": "^5.16.1",
-    "aws-sdk": "^2.1666.0",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "crypto": "^1.0.1",
