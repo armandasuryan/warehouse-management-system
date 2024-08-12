@@ -1,5 +1,5 @@
 import express from "express";
-import uploadFileController from "../utils/uploadFile.js";
+import uploadFileController from "../utils/file.js";
 import { auth } from "../middleware/jwtAuth.js";
 import multer from 'multer';
 
