@@ -45,9 +45,9 @@ model users {
 model employee_has_profile {
   id                 Int       @id @default(autoincrement())
   id_employee        Int?
-  url                String?   @db.VarChar(255)
   bucket_name        String?   @db.VarChar(255)
   original_file_name String?   @db.VarChar(255)
+  file_minio_name    String?   @db.VarChar(100)
   employee           employee? @relation(fields: [id_employee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "employee_has_profile_ibfk_1")
 
   @@index([id_employee], map: "id_employee")
