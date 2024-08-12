@@ -101,54 +101,12 @@ const getUserLogin = async (username) => {
     return user;
 };
 
-const createUserProfile = async (data) => {
-    return await db.employee_has_profile.create({
-        data: {
-            id_employee: data.id_employee,
-            url: data.url,
-            bucket_name: data.bucket_name,
-            original_file_name: data.original_file_name,
-        }
-    });
-};
-
-const updateUserProfile = async (data) => {
-    return await db.employee_has_profile.update({
-        where: {id: employee_has_profile.id},
-        data: {
-            id_employee: data.id_employee,
-            url: data.url,
-            bucket_name: data.bucket_name,
-            original_file_name: data.original_file_name,
-        }
-    });
-};
-
-const getUserProfile = async (id) => {
-    let users;
-
-    users = await db.$queryRaw`
-    select emp.name, emp.email, 
-    emp_profile.id as id_emp_profile, emp_profile.url, emp_profile.bucket_name, emp_profile.original_file_name,
-    role.role_name, 
-    from employee emp
-    left join employee_has_profile emp_profile ON emp_profile.id_employee = emp.id
-    left join role on role.id = employee.id_role
-    where ${id}
-    group by emp.id`
-
-    return users;
-};
-
 const userModel = {
     createUser,
     getAllUsers,
     updateUser,
     deleteUser,
     getUserLogin,
-    createUserProfile,
-    updateUserProfile,
-    getUserProfile,
 };
 
 export default userModel;
