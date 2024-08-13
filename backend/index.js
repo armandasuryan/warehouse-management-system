@@ -5,6 +5,7 @@ import userRoutes from './src/routes/user.routes.js';
 import uploadFileRoutes from './src/routes/file.routes.js';
 import bodyParser from 'body-parser';
 import accountProfileRoutes from './src/routes/account.routes.js';
+import chalk from 'chalk';
 
 config()
 const PORT = process.env.PORT || 8080;
@@ -15,19 +16,25 @@ const version = '/wms/api/v1'
 app.use(express.json(), bodyParser.json());
 
 app.use(
-    `${version}`, 
-    userRoutes, 
+    `${version}`,
+    userRoutes,
     uploadFileRoutes,
     accountProfileRoutes
-    )
+)
 
 app.listen(PORT, async () => {
     try {
         await db.$connect();
-        console.log('Database connection succesful from', db._appliedParent._activeProvider)
+        const message = 'Database connection succesfull from';
+        const dbMsg = chalk.bgYellow.bold.green(message);
+        console.log(dbMsg, db._appliedParent._activeProvider)
     } catch (error) {
-        console.log('Database connection error :', error)
+        const message = 'Database connection error';
+        const dbMsg = chalk.bgYellow.bold.red(message);
+        console.log(dbMsg, error)
     }
 
-    console.log(`Server succesfully run in port ${DB_HOST}:${PORT}`)
+    const message = 'Server succesfully run in port';
+    const serverMsg = chalk.bgYellow.bold.green(message);
+    console.log(`${serverMsg} ${DB_HOST}:${PORT}`)
 })
